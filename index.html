@@ -1,0 +1,814 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>Mirage — Give Your AI Agents Eyes</title>
+  <style>
+    *, *::before, *::after { box-sizing: border-box; margin: 0; padding: 0; }
+
+    :root {
+      --bg: #0a0a0f;
+      --surface: #111118;
+      --border: #1e1e2e;
+      --accent: #7c6af7;
+      --accent-light: #a89fff;
+      --text: #e8e8f0;
+      --muted: #8888a0;
+      --green: #4ade80;
+      --cyan: #22d3ee;
+    }
+
+    body {
+      background: var(--bg);
+      color: var(--text);
+      font-family: -apple-system, BlinkMacSystemFont, 'SF Pro Display', system-ui, sans-serif;
+      line-height: 1.6;
+      -webkit-font-smoothing: antialiased;
+    }
+
+    a { color: var(--accent-light); text-decoration: none; }
+
+    /* NAV */
+    nav {
+      display: flex;
+      align-items: center;
+      justify-content: space-between;
+      padding: 20px 48px;
+      border-bottom: 1px solid var(--border);
+      position: sticky;
+      top: 0;
+      background: rgba(10,10,15,0.92);
+      backdrop-filter: blur(12px);
+      z-index: 100;
+    }
+    .nav-logo { font-size: 18px; font-weight: 700; letter-spacing: -0.5px; color: var(--text); }
+    .nav-logo span { color: var(--accent); }
+    .nav-links { display: flex; gap: 28px; align-items: center; }
+    .nav-links a { color: var(--muted); font-size: 14px; transition: color .2s; }
+    .nav-links a:hover { color: var(--text); }
+    .btn-nav {
+      background: var(--accent);
+      color: #fff !important;
+      padding: 8px 18px;
+      border-radius: 8px;
+      font-size: 14px;
+      font-weight: 600;
+      transition: opacity .2s;
+    }
+    .btn-nav:hover { opacity: .85; }
+
+    /* HERO */
+    .hero {
+      text-align: center;
+      padding: 120px 24px 80px;
+      max-width: 860px;
+      margin: 0 auto;
+      position: relative;
+    }
+    /* Subtle radial glow behind hero */
+    .hero::before {
+      content: '';
+      position: absolute;
+      top: 60px;
+      left: 50%;
+      transform: translateX(-50%);
+      width: 600px;
+      height: 400px;
+      background: radial-gradient(ellipse at center, rgba(124,106,247,0.12) 0%, transparent 70%);
+      pointer-events: none;
+    }
+    .hero-badge {
+      display: inline-flex;
+      align-items: center;
+      gap: 8px;
+      background: rgba(124,106,247,0.12);
+      border: 1px solid rgba(124,106,247,0.3);
+      color: var(--accent-light);
+      font-size: 13px;
+      font-weight: 500;
+      padding: 6px 14px;
+      border-radius: 100px;
+      margin-bottom: 32px;
+    }
+    .hero-badge .pulse {
+      width: 7px; height: 7px;
+      background: var(--accent);
+      border-radius: 50%;
+      animation: pulse 2s ease-in-out infinite;
+    }
+    @keyframes pulse {
+      0%, 100% { opacity: 1; transform: scale(1); }
+      50% { opacity: 0.5; transform: scale(0.8); }
+    }
+    h1 {
+      font-size: clamp(46px, 7.5vw, 80px);
+      font-weight: 800;
+      letter-spacing: -2.5px;
+      line-height: 1.02;
+      margin-bottom: 28px;
+      background: linear-gradient(135deg, #fff 30%, #9988ff 80%);
+      -webkit-background-clip: text;
+      -webkit-text-fill-color: transparent;
+      background-clip: text;
+    }
+    .hero p {
+      font-size: 20px;
+      color: var(--muted);
+      max-width: 580px;
+      margin: 0 auto 44px;
+      line-height: 1.65;
+    }
+    .hero p strong { color: var(--text); font-weight: 600; }
+    .hero-cta {
+      display: flex;
+      gap: 16px;
+      justify-content: center;
+      flex-wrap: wrap;
+    }
+    .btn-primary {
+      background: var(--accent);
+      color: #fff;
+      padding: 14px 32px;
+      border-radius: 10px;
+      font-size: 16px;
+      font-weight: 700;
+      transition: all .2s;
+      display: inline-flex;
+      align-items: center;
+      gap: 8px;
+    }
+    .btn-primary:hover { background: #9080ff; transform: translateY(-1px); box-shadow: 0 8px 32px rgba(124,106,247,0.35); }
+    .btn-secondary {
+      background: var(--surface);
+      border: 1px solid var(--border);
+      color: var(--text);
+      padding: 14px 32px;
+      border-radius: 10px;
+      font-size: 16px;
+      font-weight: 600;
+      transition: all .2s;
+    }
+    .btn-secondary:hover { border-color: var(--accent); }
+    .hero-sub { margin-top: 20px; font-size: 13px; color: var(--muted); }
+
+    /* AGENT VISUAL */
+    .agent-visual {
+      max-width: 960px;
+      margin: 64px auto 0;
+      padding: 0 24px;
+      display: grid;
+      grid-template-columns: 1fr auto 1fr;
+      gap: 16px;
+      align-items: center;
+    }
+    .agent-box {
+      background: var(--surface);
+      border: 1px solid var(--border);
+      border-radius: 14px;
+      padding: 24px;
+    }
+    .agent-box.active { border-color: var(--accent); }
+    .agent-box .label {
+      font-size: 11px;
+      text-transform: uppercase;
+      letter-spacing: 1.5px;
+      color: var(--muted);
+      font-weight: 700;
+      margin-bottom: 14px;
+    }
+    .agent-box .icon-row { display: flex; gap: 12px; align-items: center; margin-bottom: 10px; }
+    .agent-icon {
+      width: 36px; height: 36px;
+      border-radius: 8px;
+      display: flex; align-items: center; justify-content: center;
+      font-size: 18px;
+    }
+    .agent-icon.purple { background: rgba(124,106,247,0.15); }
+    .agent-icon.cyan { background: rgba(34,211,238,0.12); }
+    .agent-icon.green { background: rgba(74,222,128,0.1); }
+    .agent-name { font-size: 13px; font-weight: 600; }
+    .agent-status { font-size: 11px; color: var(--green); }
+    .arrow-box {
+      text-align: center;
+      padding: 0 8px;
+    }
+    .arrow-label {
+      font-size: 11px;
+      color: var(--accent-light);
+      font-weight: 600;
+      letter-spacing: 1px;
+      margin-bottom: 6px;
+      text-transform: uppercase;
+    }
+    .arrow { font-size: 24px; color: var(--accent); }
+    .mirage-center {
+      background: linear-gradient(145deg, rgba(124,106,247,0.15), rgba(124,106,247,0.05));
+      border: 1px solid var(--accent);
+      border-radius: 14px;
+      padding: 20px 24px;
+      text-align: center;
+    }
+    .mirage-center .m-label { font-size: 11px; text-transform: uppercase; letter-spacing: 2px; color: var(--accent-light); font-weight: 700; margin-bottom: 6px; }
+    .mirage-center .m-title { font-size: 20px; font-weight: 800; letter-spacing: -0.5px; }
+    .mirage-center .m-sub { font-size: 12px; color: var(--muted); margin-top: 4px; }
+    .display-dot {
+      display: inline-block;
+      width: 8px; height: 8px;
+      background: var(--green);
+      border-radius: 50%;
+      margin-right: 6px;
+      animation: pulse 2s ease-in-out infinite;
+    }
+
+    /* COMPAT STRIP */
+    .compat {
+      text-align: center;
+      padding: 40px 24px;
+      border-top: 1px solid var(--border);
+      border-bottom: 1px solid var(--border);
+      margin-top: 80px;
+    }
+    .compat p { font-size: 12px; color: var(--muted); text-transform: uppercase; letter-spacing: 1.5px; margin-bottom: 20px; font-weight: 600; }
+    .compat-row {
+      display: flex;
+      gap: 8px;
+      justify-content: center;
+      flex-wrap: wrap;
+    }
+    .compat-pill {
+      background: var(--surface);
+      border: 1px solid var(--border);
+      border-radius: 100px;
+      padding: 6px 16px;
+      font-size: 13px;
+      font-weight: 500;
+      color: var(--muted);
+    }
+
+    /* SECTIONS */
+    .section {
+      max-width: 960px;
+      margin: 0 auto;
+      padding: 96px 24px;
+    }
+    .section-label {
+      font-size: 12px;
+      font-weight: 700;
+      text-transform: uppercase;
+      letter-spacing: 2px;
+      color: var(--accent);
+      margin-bottom: 16px;
+    }
+    h2 {
+      font-size: clamp(28px, 4vw, 44px);
+      font-weight: 800;
+      letter-spacing: -1.5px;
+      line-height: 1.1;
+      margin-bottom: 16px;
+    }
+    .section-sub {
+      font-size: 18px;
+      color: var(--muted);
+      max-width: 560px;
+      line-height: 1.6;
+      margin-bottom: 0;
+    }
+
+    /* SEE/ACT SPLIT */
+    .see-act {
+      display: grid;
+      grid-template-columns: 1fr 1fr;
+      gap: 24px;
+      margin-top: 56px;
+    }
+    .see-act-card {
+      border-radius: 16px;
+      padding: 36px;
+      position: relative;
+      overflow: hidden;
+    }
+    .see-act-card.see {
+      background: linear-gradient(145deg, rgba(124,106,247,0.1), rgba(124,106,247,0.03));
+      border: 1px solid rgba(124,106,247,0.3);
+    }
+    .see-act-card.act {
+      background: linear-gradient(145deg, rgba(34,211,238,0.08), rgba(34,211,238,0.02));
+      border: 1px solid rgba(34,211,238,0.25);
+    }
+    .see-act-card .big-word {
+      font-size: 72px;
+      font-weight: 900;
+      letter-spacing: -3px;
+      line-height: 1;
+      margin-bottom: 16px;
+      opacity: 0.15;
+      position: absolute;
+      top: 24px;
+      right: 24px;
+    }
+    .see-act-card.see .big-word { color: var(--accent); }
+    .see-act-card.act .big-word { color: var(--cyan); }
+    .see-act-card h3 {
+      font-size: 26px;
+      font-weight: 800;
+      letter-spacing: -0.5px;
+      margin-bottom: 10px;
+      display: flex;
+      align-items: center;
+      gap: 12px;
+    }
+    .see-act-card h3 .emoji { font-size: 28px; }
+    .see-act-card p { font-size: 15px; color: var(--muted); line-height: 1.65; margin-bottom: 20px; }
+    .capability-list { list-style: none; }
+    .capability-list li {
+      font-size: 14px;
+      color: var(--muted);
+      padding: 8px 0;
+      border-bottom: 1px solid rgba(255,255,255,0.05);
+      display: flex;
+      align-items: center;
+      gap: 10px;
+    }
+    .capability-list li:last-child { border-bottom: none; }
+    .capability-list .tag {
+      font-size: 10px;
+      font-weight: 700;
+      letter-spacing: 1px;
+      text-transform: uppercase;
+      padding: 2px 8px;
+      border-radius: 4px;
+      flex-shrink: 0;
+    }
+    .tag-purple { background: rgba(124,106,247,0.2); color: var(--accent-light); }
+    .tag-cyan { background: rgba(34,211,238,0.15); color: var(--cyan); }
+
+    /* THE BLOCKER SECTION */
+    .blocker-grid {
+      display: grid;
+      grid-template-columns: repeat(auto-fit, minmax(260px, 1fr));
+      gap: 16px;
+      margin-top: 48px;
+    }
+    .blocker-card {
+      background: var(--surface);
+      border: 1px solid var(--border);
+      border-radius: 12px;
+      padding: 24px;
+    }
+    .blocker-card .icon { font-size: 22px; margin-bottom: 12px; }
+    .blocker-card h3 { font-size: 15px; font-weight: 700; margin-bottom: 8px; }
+    .blocker-card p { font-size: 14px; color: var(--muted); line-height: 1.6; }
+
+    /* FEATURES */
+    .features-grid {
+      display: grid;
+      grid-template-columns: repeat(auto-fit, minmax(280px, 1fr));
+      gap: 24px;
+      margin-top: 56px;
+    }
+    .feature-card {
+      background: var(--surface);
+      border: 1px solid var(--border);
+      border-radius: 14px;
+      padding: 28px;
+      transition: border-color .2s;
+    }
+    .feature-card:hover { border-color: var(--accent); }
+    .feature-icon {
+      width: 44px; height: 44px;
+      background: rgba(124,106,247,0.15);
+      border-radius: 10px;
+      display: flex; align-items: center; justify-content: center;
+      font-size: 20px;
+      margin-bottom: 16px;
+    }
+    .feature-card h3 { font-size: 16px; font-weight: 700; margin-bottom: 8px; }
+    .feature-card p { font-size: 14px; color: var(--muted); line-height: 1.6; }
+
+    /* HOW IT WORKS */
+    .steps {
+      display: grid;
+      grid-template-columns: repeat(auto-fit, minmax(240px, 1fr));
+      gap: 32px;
+      margin-top: 56px;
+    }
+    .step-num { font-size: 11px; font-weight: 800; text-transform: uppercase; letter-spacing: 2px; color: var(--accent); margin-bottom: 12px; }
+    .step h3 { font-size: 17px; font-weight: 700; margin-bottom: 8px; }
+    .step p { font-size: 14px; color: var(--muted); line-height: 1.6; }
+    .step-code {
+      margin-top: 12px;
+      background: rgba(255,255,255,0.04);
+      border: 1px solid var(--border);
+      border-radius: 8px;
+      padding: 10px 14px;
+      font-family: 'SF Mono', 'Fira Code', monospace;
+      font-size: 12px;
+      color: var(--accent-light);
+      line-height: 1.6;
+    }
+
+    /* CALLOUT */
+    .callout {
+      background: rgba(74,222,128,0.06);
+      border: 1px solid rgba(74,222,128,0.2);
+      border-radius: 12px;
+      padding: 20px 24px;
+      margin-top: 40px;
+      display: flex;
+      gap: 16px;
+      align-items: flex-start;
+    }
+    .callout .icon { font-size: 20px; margin-top: 2px; }
+    .callout h4 { font-size: 14px; font-weight: 700; color: var(--green); margin-bottom: 4px; }
+    .callout p { font-size: 13px; color: var(--muted); }
+    .callout code {
+      background: rgba(255,255,255,0.06);
+      border-radius: 4px;
+      padding: 1px 6px;
+      font-size: 12px;
+      font-family: 'SF Mono', monospace;
+    }
+
+    /* PRICING */
+    .pricing-wrap {
+      display: flex;
+      gap: 24px;
+      justify-content: center;
+      margin-top: 56px;
+      flex-wrap: wrap;
+    }
+    .pricing-card {
+      background: var(--surface);
+      border: 1px solid var(--border);
+      border-radius: 16px;
+      padding: 36px;
+      width: 300px;
+      position: relative;
+    }
+    .pricing-card.featured {
+      border-color: var(--accent);
+      background: linear-gradient(145deg, rgba(124,106,247,0.08), var(--surface));
+    }
+    .pricing-badge {
+      position: absolute;
+      top: -12px;
+      left: 50%;
+      transform: translateX(-50%);
+      background: var(--accent);
+      color: #fff;
+      font-size: 11px;
+      font-weight: 700;
+      text-transform: uppercase;
+      letter-spacing: 1px;
+      padding: 4px 14px;
+      border-radius: 100px;
+      white-space: nowrap;
+    }
+    .pricing-name { font-size: 14px; color: var(--muted); font-weight: 600; margin-bottom: 8px; }
+    .pricing-price { font-size: 48px; font-weight: 800; letter-spacing: -2px; margin-bottom: 4px; }
+    .pricing-price sup { font-size: 24px; vertical-align: top; margin-top: 10px; display: inline-block; }
+    .pricing-desc { font-size: 13px; color: var(--muted); margin-bottom: 28px; }
+    .pricing-features { list-style: none; margin-bottom: 28px; }
+    .pricing-features li {
+      font-size: 14px;
+      color: var(--muted);
+      padding: 8px 0;
+      border-bottom: 1px solid var(--border);
+      display: flex;
+      gap: 10px;
+      align-items: center;
+    }
+    .pricing-features li:last-child { border-bottom: none; }
+    .pricing-features .check { color: var(--green); font-size: 16px; }
+    .btn-pricing {
+      width: 100%;
+      text-align: center;
+      padding: 12px;
+      border-radius: 8px;
+      font-size: 15px;
+      font-weight: 700;
+      display: block;
+      transition: all .2s;
+    }
+    .btn-pricing-primary { background: var(--accent); color: #fff; }
+    .btn-pricing-primary:hover { background: #9080ff; }
+    .btn-pricing-ghost { background: transparent; border: 1px solid var(--border); color: var(--text); }
+    .btn-pricing-ghost:hover { border-color: var(--accent); }
+
+    .divider { border: none; border-top: 1px solid var(--border); }
+
+    footer {
+      padding: 40px 48px;
+      display: flex;
+      justify-content: space-between;
+      align-items: center;
+      flex-wrap: wrap;
+      gap: 16px;
+    }
+    footer .logo { font-size: 16px; font-weight: 700; }
+    footer .logo span { color: var(--accent); }
+    footer p { font-size: 13px; color: var(--muted); }
+    .footer-links { display: flex; gap: 24px; }
+    .footer-links a { font-size: 13px; color: var(--muted); transition: color .2s; }
+    .footer-links a:hover { color: var(--text); }
+
+    @media (max-width: 680px) {
+      .see-act { grid-template-columns: 1fr; }
+      nav { padding: 16px 20px; }
+      .nav-links a:not(.btn-nav) { display: none; }
+      footer { padding: 32px 20px; flex-direction: column; text-align: center; }
+      .agent-visual { grid-template-columns: 1fr; }
+      .arrow-box { display: none; }
+    }
+  </style>
+</head>
+<body>
+
+<!-- NAV -->
+<nav>
+  <div class="nav-logo">Mirage<span>.</span></div>
+  <div class="nav-links">
+    <a href="#agents">For agents</a>
+    <a href="#how">How it works</a>
+    <a href="#pricing">Pricing</a>
+    <a href="#pricing" class="btn-nav">Get Mirage — $4.99</a>
+  </div>
+</nav>
+
+<!-- HERO -->
+<section class="hero">
+  <div class="hero-badge">
+    <div class="pulse"></div>
+    Virtual display for macOS · Built for AI agents
+  </div>
+  <h1>Give your AI agents eyes.</h1>
+  <p>
+    AI agents need to <strong>see the screen</strong> and <strong>interact with apps</strong>.
+    On a headless Mac, that's impossible — until now.
+    Mirage creates a persistent virtual display so your agents can work unattended, around the clock.
+  </p>
+  <div class="hero-cta">
+    <a href="#pricing" class="btn-primary">↓ Get Mirage — $4.99</a>
+    <a href="#agents" class="btn-secondary">See how it works</a>
+  </div>
+  <p class="hero-sub">One-time purchase · macOS 13+ · Apple Silicon & Intel · No dummy plug</p>
+</section>
+
+<!-- AGENT FLOW DIAGRAM -->
+<div class="agent-visual">
+  <div class="agent-box active">
+    <div class="label">Your AI agents</div>
+    <div class="agent-icon-row" style="display:flex; flex-direction:column; gap:10px;">
+      <div class="icon-row">
+        <div class="agent-icon purple">🤖</div>
+        <div><div class="agent-name">Claude Computer Use</div><div class="agent-status">● seeing screen</div></div>
+      </div>
+      <div class="icon-row">
+        <div class="agent-icon purple">👁</div>
+        <div><div class="agent-name">Peekaboo / Vision AI</div><div class="agent-status">● capturing UI</div></div>
+      </div>
+      <div class="icon-row">
+        <div class="agent-icon purple">🌐</div>
+        <div><div class="agent-name">Browser automation</div><div class="agent-status">● clicking, typing</div></div>
+      </div>
+    </div>
+  </div>
+
+  <div class="arrow-box">
+    <div class="arrow-label">powered by</div>
+    <div class="arrow">→</div>
+    <div style="margin-top:16px;">
+      <div class="mirage-center">
+        <div class="m-label">Virtual display</div>
+        <div class="m-title">Mirage<span style="color:var(--accent)">.</span></div>
+        <div class="m-sub"><span class="display-dot"></span>3840×2160 · always on</div>
+      </div>
+    </div>
+    <div class="arrow" style="margin-top:16px;">→</div>
+  </div>
+
+  <div class="agent-box">
+    <div class="label">What becomes possible</div>
+    <div style="display:flex; flex-direction:column; gap:10px;">
+      <div style="font-size:14px; padding:10px 0; border-bottom:1px solid var(--border); color:var(--muted);">✅ ScreenCaptureKit returns frames</div>
+      <div style="font-size:14px; padding:10px 0; border-bottom:1px solid var(--border); color:var(--muted);">✅ UI automation has a window to click</div>
+      <div style="font-size:14px; padding:10px 0; border-bottom:1px solid var(--border); color:var(--muted);">✅ Screenshots work over SSH/VNC</div>
+      <div style="font-size:14px; padding:10px 0; color:var(--muted);">✅ Agent runs 24/7, no monitor needed</div>
+    </div>
+  </div>
+</div>
+
+<!-- COMPAT STRIP -->
+<div class="compat" style="margin-top: 80px;">
+  <p>Works with</p>
+  <div class="compat-row">
+    <span class="compat-pill">Claude Computer Use</span>
+    <span class="compat-pill">OpenAI Operator</span>
+    <span class="compat-pill">Peekaboo</span>
+    <span class="compat-pill">Playwright</span>
+    <span class="compat-pill">ScreenCaptureKit</span>
+    <span class="compat-pill">AnyDesk / NoMachine</span>
+    <span class="compat-pill">Any VNC client</span>
+    <span class="compat-pill">Your custom agent</span>
+  </div>
+</div>
+
+<!-- SEE AND ACT -->
+<section class="section" id="agents">
+  <div class="section-label">Why it matters</div>
+  <h2>Agents need two things.<br>Mirage provides both.</h2>
+  <p class="section-sub">Without a display, AI agents are flying blind. Mirage is the missing layer between your agent and your Mac.</p>
+
+  <div class="see-act">
+    <div class="see-act-card see">
+      <div class="big-word">SEE</div>
+      <h3><span class="emoji">👁</span> See</h3>
+      <p>For an AI agent to understand what's on screen, it needs frames to capture. Without a display, <code style="font-size:12px; background:rgba(255,255,255,0.08); padding:1px 6px; border-radius:4px;">ScreenCaptureKit</code> returns nothing. Every screenshot is blank.</p>
+      <ul class="capability-list">
+        <li><span class="tag tag-purple">Enabled</span> Screenshot capture over SSH</li>
+        <li><span class="tag tag-purple">Enabled</span> Real-time screen streaming</li>
+        <li><span class="tag tag-purple">Enabled</span> Vision model context (what's on screen)</li>
+        <li><span class="tag tag-purple">Enabled</span> UI element detection</li>
+      </ul>
+    </div>
+    <div class="see-act-card act">
+      <div class="big-word">ACT</div>
+      <h3><span class="emoji">🖱</span> Act</h3>
+      <p>Clicking, typing, and navigating require windows to exist. Without a display, apps refuse to render — leaving agents with nothing to interact with.</p>
+      <ul class="capability-list">
+        <li><span class="tag tag-cyan">Enabled</span> Mouse click and drag</li>
+        <li><span class="tag tag-cyan">Enabled</span> Keyboard input to any app</li>
+        <li><span class="tag tag-cyan">Enabled</span> Browser automation (full DOM)</li>
+        <li><span class="tag tag-cyan">Enabled</span> App window management</li>
+      </ul>
+    </div>
+  </div>
+
+  <div class="callout">
+    <div class="icon">✅</div>
+    <div>
+      <h4>Invisible to macOS — in the best way</h4>
+      <p>Mirage registers as a real display via CoreGraphics. It appears in <code>system_profiler SPDisplaysDataType</code>, <code>CGGetActiveDisplayList</code>, and every screen capture API. macOS can't tell the difference — so your agents can't either.</p>
+    </div>
+  </div>
+</section>
+
+<hr class="divider" />
+
+<!-- THE PROBLEM WITHOUT MIRAGE -->
+<section class="section">
+  <div class="section-label">Without Mirage</div>
+  <h2>Your agent is stuck.</h2>
+  <p class="section-sub">Running a Mac mini headlessly for AI workloads means hitting the same three walls, over and over.</p>
+  <div class="blocker-grid">
+    <div class="blocker-card">
+      <div class="icon">📷</div>
+      <h3>Blank screenshots</h3>
+      <p>ScreenCaptureKit and CGWindowListCreateImage return empty frames. Your agent calls "take a screenshot" and gets nothing back.</p>
+    </div>
+    <div class="blocker-card">
+      <div class="icon">🪟</div>
+      <h3>Apps won't render</h3>
+      <p>Without a display, macOS won't create window layers. Browsers, Electron apps, and GUI tools launch but never actually paint their UI.</p>
+    </div>
+    <div class="blocker-card">
+      <div class="icon">🔌</div>
+      <h3>Dummy plugs are fragile</h3>
+      <p>$8 HDMI adapters fall out, cap at 1080p, and disappear when you need them. Not infrastructure you want to depend on.</p>
+    </div>
+  </div>
+</section>
+
+<hr class="divider" />
+
+<!-- FEATURES -->
+<section class="section" id="features">
+  <div class="section-label">What you get</div>
+  <h2>Everything you need.<br>Nothing you don't.</h2>
+  <div class="features-grid">
+    <div class="feature-card">
+      <div class="feature-icon">🖥️</div>
+      <h3>4K virtual display</h3>
+      <p>3840×2160 at 60Hz. High enough resolution that vision models can read small UI elements clearly.</p>
+    </div>
+    <div class="feature-card">
+      <div class="feature-icon">⚡</div>
+      <h3>Always on</h3>
+      <p>Runs as a LaunchAgent. Starts at login, survives reboots, never sleeps. Your agents run 24/7.</p>
+    </div>
+    <div class="feature-card">
+      <div class="feature-icon">🪶</div>
+      <h3>Featherweight</h3>
+      <p>A single daemon under 1MB. No menu bar icon, no update nags, no bloat. It runs silently in the background.</p>
+    </div>
+    <div class="feature-card">
+      <div class="feature-icon">🍺</div>
+      <h3>Homebrew native</h3>
+      <p>Install, update, and remove with Homebrew. Fits naturally into your existing dev toolchain.</p>
+    </div>
+    <div class="feature-card">
+      <div class="feature-icon">🔒</div>
+      <h3>Fully local</h3>
+      <p>No telemetry, no cloud, no network calls. Mirage creates a display and stays silent. Your screen activity is yours.</p>
+    </div>
+    <div class="feature-card">
+      <div class="feature-icon">🛠</div>
+      <h3>CLI friendly</h3>
+      <p>Designed for developers. Check status, restart, or reconfigure without touching a GUI — over SSH, from a script, or from your agent itself.</p>
+    </div>
+  </div>
+</section>
+
+<hr class="divider" />
+
+<!-- HOW IT WORKS -->
+<section class="section" id="how">
+  <div class="section-label">How it works</div>
+  <h2>Running in three steps.</h2>
+  <div class="steps">
+    <div class="step">
+      <div class="step-num">Step 01</div>
+      <h3>Install via Homebrew</h3>
+      <p>One command installs the signed binary and registers the LaunchAgent automatically.</p>
+      <div class="step-code">brew install mirage-display</div>
+    </div>
+    <div class="step">
+      <div class="step-num">Step 02</div>
+      <h3>Mirage starts itself</h3>
+      <p>A virtual 4K display appears immediately and persists across reboots. No configuration needed.</p>
+      <div class="step-code">launchctl list | grep mirage<br><span style="color: var(--green)">com.mirage.display  ✓ running</span></div>
+    </div>
+    <div class="step">
+      <div class="step-num">Step 03</div>
+      <h3>Your agents can see</h3>
+      <p>Every screen capture API returns real frames. Point your agents at the Mac and let them work.</p>
+      <div class="step-code">system_profiler SPDisplaysDataType<br><span style="color: var(--green)">Resolution: 3840x2160 (Mirage)</span></div>
+    </div>
+  </div>
+</section>
+
+<hr class="divider" />
+
+<!-- PRICING -->
+<section class="section" id="pricing" style="text-align: center;">
+  <div class="section-label">Pricing</div>
+  <h2>Simple. One-time. Fair.</h2>
+  <p style="color: var(--muted); margin-top: 12px;">No subscription. No seat licensing. Pay once, use on all your Macs forever.</p>
+
+  <div class="pricing-wrap">
+    <div class="pricing-card">
+      <div class="pricing-name">Open Source</div>
+      <div class="pricing-price"><sup>$</sup>0</div>
+      <div class="pricing-desc">Build it yourself from source</div>
+      <ul class="pricing-features">
+        <li><span class="check">✓</span> 1920×1080 virtual display</li>
+        <li><span class="check">✓</span> LaunchAgent config included</li>
+        <li><span class="check">✓</span> Full source on GitHub</li>
+        <li style="opacity:.4"><span>—</span> No signed binary</li>
+        <li style="opacity:.4"><span>—</span> No Homebrew tap</li>
+        <li style="opacity:.4"><span>—</span> Community support only</li>
+      </ul>
+      <a href="https://github.com" class="btn-pricing btn-pricing-ghost">View on GitHub</a>
+    </div>
+
+    <div class="pricing-card featured">
+      <div class="pricing-badge">Recommended for agents</div>
+      <div class="pricing-name">Mirage</div>
+      <div class="pricing-price"><sup>$</sup>4.99</div>
+      <div class="pricing-desc">One-time · All your Macs · Forever</div>
+      <ul class="pricing-features">
+        <li><span class="check">✓</span> 4K (3840×2160) virtual display</li>
+        <li><span class="check">✓</span> Signed & notarized binary</li>
+        <li><span class="check">✓</span> Homebrew tap (1-line install)</li>
+        <li><span class="check">✓</span> Free updates</li>
+        <li><span class="check">✓</span> Email support</li>
+        <li><span class="check">✓</span> 30-day refund guarantee</li>
+      </ul>
+      <a href="#" class="btn-pricing btn-pricing-primary">Get Mirage</a>
+    </div>
+  </div>
+
+  <p style="margin-top: 24px; font-size: 13px; color: var(--muted);">
+    Requires macOS 13 Ventura or later · Apple Silicon & Intel · Works on Mac mini, Mac Studio, Mac Pro
+  </p>
+</section>
+
+<!-- FOOTER -->
+<hr class="divider" />
+<footer>
+  <div>
+    <div class="logo">Mirage<span>.</span></div>
+    <p>Virtual display for macOS. Built by an indie developer.</p>
+  </div>
+  <div class="footer-links">
+    <a href="#">Documentation</a>
+    <a href="#">GitHub</a>
+    <a href="#">Support</a>
+    <a href="#">Privacy</a>
+  </div>
+  <p>© 2026 · All rights reserved</p>
+</footer>
+
+</body>
+</html>
