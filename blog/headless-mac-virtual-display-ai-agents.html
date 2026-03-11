@@ -6,13 +6,13 @@
 
   <!-- SEO Meta -->
   <title>Headless Mac Virtual Display for AI Agents | Mirage</title>
-  <meta name="description" content="Run AI agents on a headless Mac without a dummy plug. Mirage uses CGVirtualDisplay API to create a persistent 4K virtual display — built for Claude Computer Use, OpenClaw, Peekaboo, and Playwright." />
+  <meta name="description" content="Run AI agents on a headless Mac without a dummy plug. Mirage uses CGVirtualDisplay API to create a persistent 4K virtual display — built for Claude Computer Use, OpenAI Operator, Google Project Mariner, OpenClaw, Peekaboo, and Playwright." />
   <link rel="canonical" href="https://mirageai.dev/blog/headless-mac-virtual-display-ai-agents" />
 
   <!-- Open Graph -->
   <meta property="og:type" content="article" />
   <meta property="og:title" content="Headless Mac Virtual Display for AI Agents | Mirage" />
-  <meta property="og:description" content="Run AI agents on a headless Mac without a dummy plug. Mirage uses CGVirtualDisplay API to create a persistent 4K virtual display — built for Claude Computer Use, OpenClaw, Peekaboo, and Playwright." />
+  <meta property="og:description" content="Run AI agents on a headless Mac without a dummy plug. Mirage uses CGVirtualDisplay API to create a persistent 4K virtual display — built for Claude Computer Use, OpenAI Operator, Google Project Mariner, OpenClaw, Peekaboo, and Playwright." />
   <meta property="og:url" content="https://mirageai.dev/blog/headless-mac-virtual-display-ai-agents" />
   <meta property="og:site_name" content="Mirage" />
   <meta property="og:image" content="https://mirageai.dev/og-image.png" />
@@ -331,7 +331,7 @@ mirage status</code></pre>
       from the OS's perspective.
     </p>
 
-    <h2>AI Agent macOS Integration — Claude, OpenClaw, Peekaboo, Playwright</h2>
+    <h2>AI Agent macOS Integration — Claude, OpenAI, Gemini, and More</h2>
 
     <p>
       The real value of a reliable <strong>headless Mac virtual display</strong> shows up when you 
@@ -369,6 +369,29 @@ npx playwright test --headed</code></pre>
     <p>
       Browsers launch, render, and close cleanly. No <code>DISPLAY</code> environment variable 
       hacks, no XQuartz, no virtual framebuffer workarounds — just a Mac that thinks it has a monitor.
+    </p>
+
+    <p>
+      <strong>OpenAI Operator:</strong> OpenAI's computer use agent (released January 2025) navigates 
+      web UIs to complete tasks autonomously. It renders and interacts with browser windows — which 
+      means it has the same display dependency as every other agent. A Mac mini running Operator 
+      jobs headlessly needs Mirage to give those browser windows somewhere to exist.
+    </p>
+
+    <p>
+      <strong>Google Project Mariner:</strong> DeepMind's Project Mariner controls Chrome to browse 
+      and complete tasks. Like Operator, it depends on a real rendering surface. Running Mariner 
+      unattended on a Mac means Mirage is the difference between a functional agent pipeline and a 
+      process that silently stalls waiting for a display that never appears.
+    </p>
+
+    <p>
+      <strong>browser-use and Open Interpreter:</strong> The open-source ecosystem is catching up fast. 
+      <a href="https://github.com/browser-use/browser-use" style="color:var(--accent)">browser-use</a> 
+      drives Chromium via LLM instructions; 
+      <a href="https://github.com/OpenInterpreter/open-interpreter" style="color:var(--accent)">Open Interpreter</a> 
+      executes code and controls the desktop. Both need a real display context on macOS. The same 
+      two-command Mirage install makes both work on a headless Mac.
     </p>
 
     <h2>Practical Setup: AI Agent Server on a Mac Mini</h2>
