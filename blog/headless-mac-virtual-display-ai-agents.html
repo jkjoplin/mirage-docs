@@ -1,0 +1,428 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+
+  <!-- SEO Meta -->
+  <title>Headless Mac Virtual Display for AI Agents | Mirage</title>
+  <meta name="description" content="Run AI agents on a headless Mac without a dummy plug. Mirage uses CGVirtualDisplay API to create a persistent 4K virtual display — built for Claude Computer Use, OpenClaw, Peekaboo, and Playwright." />
+  <link rel="canonical" href="https://mirageai.dev/blog/headless-mac-virtual-display-ai-agents" />
+
+  <!-- Open Graph -->
+  <meta property="og:type" content="article" />
+  <meta property="og:title" content="Headless Mac Virtual Display for AI Agents | Mirage" />
+  <meta property="og:description" content="Run AI agents on a headless Mac without a dummy plug. Mirage uses CGVirtualDisplay API to create a persistent 4K virtual display — built for Claude Computer Use, OpenClaw, Peekaboo, and Playwright." />
+  <meta property="og:url" content="https://mirageai.dev/blog/headless-mac-virtual-display-ai-agents" />
+  <meta property="og:site_name" content="Mirage" />
+  <meta property="og:image" content="https://mirageai.dev/og-image.png" />
+
+  <!-- Twitter Card -->
+  <meta name="twitter:card" content="summary_large_image" />
+  <meta name="twitter:title" content="Headless Mac Virtual Display for AI Agents | Mirage" />
+  <meta name="twitter:description" content="Run AI agents on a headless Mac without a dummy plug. Mirage uses CGVirtualDisplay API to create a persistent 4K virtual display." />
+  <meta name="twitter:image" content="https://mirageai.dev/og-image.png" />
+
+  <style>
+    *, *::before, *::after { box-sizing: border-box; margin: 0; padding: 0; }
+
+    :root {
+      --bg:      #0d0618;
+      --bg-card: #130923;
+      --accent:  #7c6af7;
+      --accent-dim: #5b4fcf;
+      --text:    #e8e0ff;
+      --muted:   #9d8fd0;
+      --border:  #2a1f4a;
+      --code-bg: #1a0f2e;
+    }
+
+    html { scroll-behavior: smooth; }
+
+    body {
+      background: var(--bg);
+      color: var(--text);
+      font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, "Helvetica Neue", sans-serif;
+      font-size: 1.0625rem;
+      line-height: 1.75;
+      min-height: 100vh;
+    }
+
+    /* ── Nav ── */
+    nav {
+      display: flex;
+      align-items: center;
+      justify-content: space-between;
+      padding: 1.25rem 2rem;
+      border-bottom: 1px solid var(--border);
+      background: rgba(13, 6, 24, 0.85);
+      backdrop-filter: blur(12px);
+      position: sticky;
+      top: 0;
+      z-index: 100;
+    }
+    .logo {
+      font-weight: 700;
+      font-size: 1.2rem;
+      color: var(--accent);
+      text-decoration: none;
+      letter-spacing: -0.02em;
+    }
+    .nav-links { display: flex; gap: 1.5rem; }
+    .nav-links a {
+      color: var(--muted);
+      text-decoration: none;
+      font-size: 0.9rem;
+      transition: color 0.2s;
+    }
+    .nav-links a:hover { color: var(--text); }
+
+    /* ── Layout ── */
+    .container {
+      max-width: 780px;
+      margin: 0 auto;
+      padding: 3rem 1.5rem 5rem;
+    }
+
+    /* ── Meta / breadcrumb ── */
+    .post-meta {
+      display: flex;
+      align-items: center;
+      gap: 0.75rem;
+      font-size: 0.82rem;
+      color: var(--muted);
+      margin-bottom: 2rem;
+    }
+    .tag {
+      background: rgba(124, 106, 247, 0.15);
+      color: var(--accent);
+      padding: 0.15rem 0.6rem;
+      border-radius: 4px;
+      font-size: 0.78rem;
+      font-weight: 600;
+      letter-spacing: 0.03em;
+      text-transform: uppercase;
+    }
+
+    /* ── Typography ── */
+    h1 {
+      font-size: clamp(1.75rem, 4vw, 2.5rem);
+      font-weight: 800;
+      line-height: 1.2;
+      letter-spacing: -0.03em;
+      margin-bottom: 1.25rem;
+      background: linear-gradient(135deg, var(--text) 0%, var(--accent) 100%);
+      -webkit-background-clip: text;
+      -webkit-text-fill-color: transparent;
+      background-clip: text;
+    }
+
+    .intro {
+      font-size: 1.125rem;
+      color: var(--muted);
+      margin-bottom: 3rem;
+      padding-bottom: 2rem;
+      border-bottom: 1px solid var(--border);
+    }
+
+    h2 {
+      font-size: 1.375rem;
+      font-weight: 700;
+      color: var(--text);
+      margin: 2.5rem 0 1rem;
+      letter-spacing: -0.02em;
+    }
+
+    p { margin-bottom: 1.25rem; }
+
+    a {
+      color: var(--accent);
+      text-decoration: none;
+      border-bottom: 1px solid rgba(124, 106, 247, 0.35);
+      transition: border-color 0.2s, color 0.2s;
+    }
+    a:hover {
+      color: #a599ff;
+      border-color: #a599ff;
+    }
+
+    /* ── Code ── */
+    pre {
+      background: var(--code-bg);
+      border: 1px solid var(--border);
+      border-radius: 10px;
+      padding: 1.25rem 1.5rem;
+      overflow-x: auto;
+      margin: 1.5rem 0;
+      font-size: 0.875rem;
+      line-height: 1.6;
+    }
+    code {
+      font-family: "SF Mono", "Fira Code", "Cascadia Code", Menlo, Monaco, monospace;
+      color: #c4b8ff;
+    }
+    p code, li code {
+      background: var(--code-bg);
+      border: 1px solid var(--border);
+      border-radius: 4px;
+      padding: 0.1em 0.4em;
+      font-size: 0.87em;
+      color: #c4b8ff;
+    }
+
+    /* Comment color in code blocks */
+    .comment { color: #5c4f8a; }
+    .cmd     { color: #a599ff; }
+    .kw      { color: #7c6af7; }
+    .str     { color: #b8f0a0; }
+
+    /* ── Callout ── */
+    .callout {
+      background: rgba(124, 106, 247, 0.08);
+      border-left: 3px solid var(--accent);
+      border-radius: 0 8px 8px 0;
+      padding: 1rem 1.25rem;
+      margin: 1.75rem 0;
+      color: var(--muted);
+      font-size: 0.95rem;
+    }
+    .callout strong { color: var(--text); }
+
+    /* ── CTA ── */
+    .cta-block {
+      background: var(--bg-card);
+      border: 1px solid var(--border);
+      border-radius: 14px;
+      padding: 2rem 2.25rem;
+      margin-top: 3.5rem;
+      text-align: center;
+    }
+    .cta-block h2 {
+      margin-top: 0;
+      margin-bottom: 0.5rem;
+    }
+    .cta-block p {
+      color: var(--muted);
+      margin-bottom: 1.5rem;
+      font-size: 0.95rem;
+    }
+    .btn-group { display: flex; gap: 0.75rem; justify-content: center; flex-wrap: wrap; }
+    .btn {
+      display: inline-block;
+      padding: 0.65rem 1.4rem;
+      border-radius: 8px;
+      font-weight: 600;
+      font-size: 0.9rem;
+      text-decoration: none;
+      border-bottom: none;
+      transition: opacity 0.2s, transform 0.15s;
+    }
+    .btn:hover { opacity: 0.88; transform: translateY(-1px); }
+    .btn-primary { background: var(--accent); color: #fff; }
+    .btn-outline {
+      background: transparent;
+      color: var(--accent);
+      border: 1px solid var(--accent) !important;
+    }
+
+    /* ── Footer ── */
+    footer {
+      text-align: center;
+      padding: 2rem;
+      font-size: 0.82rem;
+      color: var(--muted);
+      border-top: 1px solid var(--border);
+    }
+
+    /* ── Responsive ── */
+    @media (max-width: 600px) {
+      nav { padding: 1rem; }
+      .container { padding: 2rem 1rem 4rem; }
+      .cta-block { padding: 1.5rem 1.25rem; }
+    }
+  </style>
+</head>
+<body>
+
+  <nav>
+    <a href="https://mirageai.dev" class="logo">Mirage</a>
+    <div class="nav-links">
+      <a href="https://mirageai.dev/#install">Install</a>
+      <a href="https://github.com/jkjoplin/mirage">GitHub</a>
+      <a href="https://mirageai.dev/blog">Blog</a>
+    </div>
+  </nav>
+
+  <main class="container">
+
+    <div class="post-meta">
+      <span class="tag">Guide</span>
+      <span>·</span>
+      <time datetime="2026-03-11">March 11, 2026</time>
+      <span>·</span>
+      <span>7 min read</span>
+    </div>
+
+    <h1>Headless Mac Virtual Display for AI Agents — No Dummy Plug Required</h1>
+
+    <p class="intro">
+      Running an AI agent on a headless Mac — a Mac mini sitting in a rack with no monitor attached — 
+      sounds straightforward until you try to take a screenshot or drive a browser. Without a display, 
+      macOS collapses the window server and most screen-capture tools return blank frames or refuse to 
+      launch entirely. The traditional fix is a dummy HDMI plug. Mirage is the software fix: a Swift 
+      daemon that uses the <strong>CGVirtualDisplay macOS API</strong> to create a persistent 4K 
+      virtual display that the OS treats as real hardware.
+    </p>
+
+    <h2>Why Headless Macs Break AI Agent Workflows</h2>
+
+    <p>
+      The problem isn't just aesthetics. Tools like Claude Computer Use, Peekaboo, and Playwright 
+      depend on a live display connection to function correctly. On a <strong>mac mini no monitor</strong> 
+      setup, macOS typically falls back to a 1024×768 framebuffer — if it renders anything at all. 
+      Screen-capture APIs return empty buffers. Accessibility APIs can silently fail. Browser automation 
+      that works perfectly on a developer laptop will produce blank screenshots in CI or on a server Mac.
+    </p>
+
+    <p>
+      Dummy plugs work around this at the hardware layer by lying to the GPU — they present a fake 
+      EDID telling macOS a 4K monitor is connected. But they're a physical device you have to ship 
+      to wherever the Mac lives, they can fall out, and they cap you at whatever resolution the plug 
+      was programmed with. They're also unnecessary since macOS 12.4, which shipped 
+      <code>CGVirtualDisplay</code> — a private-but-stable API for creating virtual displays entirely 
+      in software.
+    </p>
+
+    <div class="callout">
+      <strong>CGVirtualDisplay</strong> is the same API Apple uses internally for virtual displays in 
+      Sidecar and Universal Control. Mirage wraps it in a persistent daemon with a clean CLI, so you 
+      don't have to reverse-engineer the entitlements or manage the process lifecycle yourself.
+    </div>
+
+    <h2>How Mirage Works</h2>
+
+    <p>
+      Mirage is a Swift daemon that registers a virtual display with <code>CGVirtualDisplayDescriptor</code>, 
+      holds the <code>CGVirtualDisplay</code> handle open for the lifetime of the process, and exposes 
+      a simple CLI for status, resolution changes, and teardown. On launch it creates a 3840×2160 
+      (4K) display at 60 Hz. macOS immediately treats it as a primary display — the window server 
+      comes fully online, screenshot APIs return real frames, and browser windows render at full resolution.
+    </p>
+
+    <p>
+      Because Mirage runs as a background daemon (managed via <code>launchd</code> or a simple 
+      <code>brew services</code> wrapper), the virtual display persists across SSH sessions, survives 
+      screensaver lock, and comes back automatically after a reboot. No babysitting required.
+    </p>
+
+    <pre><code><span class="comment"># Install Mirage via Homebrew</span>
+brew tap jkjoplin/mirage
+brew install mirage
+
+<span class="comment"># Start the daemon (creates the virtual display immediately)</span>
+mirage start
+
+<span class="comment"># Confirm the display is live</span>
+mirage status</code></pre>
+
+    <p>
+      After <code>mirage start</code>, running <code>system_profiler SPDisplaysDataType</code> will 
+      show a new 3840×2160 display in the output — indistinguishable from a physically connected monitor 
+      from the OS's perspective.
+    </p>
+
+    <h2>AI Agent macOS Integration — Claude, OpenClaw, Peekaboo, Playwright</h2>
+
+    <p>
+      The real value of a reliable <strong>headless Mac virtual display</strong> shows up when you 
+      wire AI agents into your infrastructure. Here's how Mirage integrates with the tools developers 
+      are actually using:
+    </p>
+
+    <p>
+      <strong>Claude Computer Use (headless Mac):</strong> Anthropic's computer-use capability drives 
+      the Mac desktop via screenshot + action loops. Without a display, the screenshot step fails 
+      silently and the agent has nothing to act on. With Mirage running, Claude sees a full 4K desktop 
+      and can click, type, and navigate normally — even on a Mac mini with zero physical peripherals.
+    </p>
+
+    <p>
+      <strong>OpenClaw:</strong> OpenClaw's browser control and Peekaboo integration both depend on 
+      Quartz window server APIs. Mirage gives OpenClaw a stable rendering target, which means 
+      browser automation, screen snapshots, and UI tree inspection all work without modification.
+    </p>
+
+    <p>
+      <strong>Peekaboo:</strong> Peekaboo uses <code>ScreenCaptureKit</code> to capture screenshots 
+      and perform UI automation. <code>SCShareableContent</code> requires a live display. Mirage 
+      satisfies that requirement so Peekaboo can run in fully unattended server environments.
+    </p>
+
+    <p>
+      <strong>Playwright / browser automation:</strong> Playwright's headed browser mode (useful for 
+      anti-bot evasion or visual regression testing) needs a display. With Mirage active:
+    </p>
+
+    <pre><code><span class="comment"># Playwright headed mode on a headless Mac — works with Mirage running</span>
+npx playwright test --headed</code></pre>
+
+    <p>
+      Browsers launch, render, and close cleanly. No <code>DISPLAY</code> environment variable 
+      hacks, no XQuartz, no virtual framebuffer workarounds — just a Mac that thinks it has a monitor.
+    </p>
+
+    <h2>Practical Setup: AI Agent Server on a Mac Mini</h2>
+
+    <p>
+      The typical production setup is a Mac mini (M2 or M4) acting as a dedicated AI agent host — 
+      running Claude agents, browser automation jobs, or computer-use workflows 24/7 with no 
+      monitor attached. Here's the minimal configuration:
+    </p>
+
+    <pre><code><span class="comment"># 1. Install and start Mirage</span>
+brew tap jkjoplin/mirage &amp;&amp; brew install mirage
+mirage start
+
+<span class="comment"># 2. Enable auto-start on login</span>
+brew services start mirage
+
+<span class="comment"># 3. Verify display resolution (should show 3840x2160)</span>
+system_profiler SPDisplaysDataType | grep Resolution
+
+<span class="comment"># 4. Optional: lock to a specific resolution</span>
+mirage set-resolution 2560x1440</code></pre>
+
+    <p>
+      From this point, any tool that needs a display — Claude Computer Use sessions, Peekaboo 
+      captures, Playwright tests, or OpenClaw browser automation — will find a stable 4K display 
+      waiting for it. The Mac behaves exactly like a workstation with a monitor plugged in, 
+      because as far as macOS is concerned, it does.
+    </p>
+
+    <div class="callout">
+      <strong>Note on entitlements:</strong> <code>CGVirtualDisplay</code> requires the 
+      <code>com.apple.developer.cgvirtualdisplay.mojo</code> entitlement. Mirage ships with this 
+      entitlement already configured in the signed binary — you don't need an Apple Developer account 
+      or custom entitlements to use it.
+    </div>
+
+    <div class="cta-block">
+      <h2>Get Mirage Running in Two Commands</h2>
+      <p>
+        One tap, one install, one <code>mirage start</code>. Your headless Mac gets a 4K display 
+        and your AI agents get a stable environment to work in.
+      </p>
+      <div class="btn-group">
+        <a href="https://mirageai.dev" class="btn btn-primary">mirageai.dev</a>
+        <a href="https://github.com/jkjoplin/mirage" class="btn btn-outline">View on GitHub</a>
+      </div>
+    </div>
+
+  </main>
+
+  <footer>
+    &copy; 2026 Mirage &mdash; <a href="https://mirageai.dev">mirageai.dev</a>
+  </footer>
+
+</body>
+</html>
